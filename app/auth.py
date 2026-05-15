@@ -1,13 +1,15 @@
-# LOGICA DE AUTENTICAÇÃO
+ Lógica de autenticação
 
-# 1. HASH E VERICAÇÃO DE SENHAS COM BCRYPT
-# 2. GERAÇÃO DE TOKEN JWT
-# 3. LEITURA E VALIDAÇÃO DO TOLEM VINDO DO COOKIE
+# 1. Hash e verificação de senhas com bcrypt
 
-from datetime import datetime, timedelta , timezone
-from jose import JOSEError , jwt
-from fastapi import Request , HTTPException , status
+# 2. Geração de token JWT
+
+# 3. Leitura e validação do token vindo do cookie
+
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt
 from passlib.context import CryptContext
+from fastapi import Request, HTTPException, status
 from dotenv import load_dotenv
 import os
 
@@ -15,25 +17,64 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-ACESS_TOKEN_EXPIRE_MINUTE = os.getenv("ACESS_TOKEN_EXPIRE_MINUTE")
+ACCESS_TOKEN_EXPIRE_MINUTE = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTE")
 
-# CONFIGURAR O ALGORITIMO DO HASH = BCRYPT
+# Configurar o algoritmo do hash = bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# TESTE DE SENHA
-# senha = "1234"
-# senha_hash = pwd_context.hash(senha)
 
-# print(senha)
-# print("Senha com hash: ")
-# print(senha_hash)
+# Funções de senha
 
-# senha_atual = "minhasenha"
+def hash_senha(senha: str):
+    return pwd_context.hash(senha)
 
-# print(pwd_context.verify(senha_atual , senha_hash ) )
+def verificar_senha(senha: str, senha_hash: str):
+    return pwd_context.verify(senha, senha_hash)
 
-# FUNÇÕES DE SENHA
-def hash_senha (senha : str):
-    return pwd_context.hash (senha)
-def verificar_senha(senha: str , senha_hash : str):
-    return pwd_context.verify(senha , senha_hash)
+# Funções do tokem JWT
+
+def criar_token(dados: dict):
+
+    payload = dados.copy()
+   
+    #Define quando o token expira
+    expira = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTE)
+    payload.update({"exp": expira})
+
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    return token
+
+def decodificar_token(token: str):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    return payload
+
+
+# função para usar nas rotas protegida
+def get_usuario_logado(request: Request):
+
+    token = request.cookies.get("access_token")
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Não autenticado"
+        )
+   
+    try:
+        payload = decodificar_token(token)
+        email: str = payload.get("sub")
+
+        if email is None:
+            raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido"
+        )
+
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido ou expirado"
+        )
+
