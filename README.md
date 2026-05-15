@@ -28,3 +28,5 @@ python -m alembic revision --autogenerate -m "criar a tabela usuarios"
 ```bash
 python -m alembic upgrade head
 ```
+
+# JWT
