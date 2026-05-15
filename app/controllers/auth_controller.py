@@ -19,7 +19,7 @@ templates = Jinja2Templates(directory = "app/templates")
 def tela_cadastro(request: Request):
     return templates.TemplateResponse(
         request,
-        "auth/cadastro.html",
+        "/auth/cadastro.html",
         {"request": request}
     )
 
@@ -28,7 +28,7 @@ def tela_cadastro(request: Request):
 def tela_login(request: Request):
     return templates.TemplateResponse(
         request,
-        "auth/login.html",
+        "/auth/login.html",
         {"request": request}    
     )
 
@@ -48,7 +48,7 @@ def fazer_cadastro(
     if usuario_existente:
         return templates.TemplateResponse(
             request,
-            "auth/cadastro.html",
+            "/auth/cadastro.html",
             {"request": request , "erro": "Este E-mail já está cadastrado"}
         )
     #CRIAR O USUARIO - CRIAR O OBJETO
@@ -61,3 +61,4 @@ def fazer_cadastro(
     )
     db.add(novo_usuario)
     db.commit
+    return RedirectResponse(url = "/auth/login" , status_code = 302)
