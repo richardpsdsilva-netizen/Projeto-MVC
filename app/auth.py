@@ -1,4 +1,4 @@
- Lógica de autenticação
+#Lógica de autenticação
 
 # 1. Hash e verificação de senhas com bcrypt
 

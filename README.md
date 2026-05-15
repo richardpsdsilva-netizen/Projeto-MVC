@@ -30,3 +30,9 @@ python -m alembic upgrade head
 ```
 
 # JWT
+
+
+# RODAR O CODIGO 
+```bash
+python -m uvicorn app.main:app --reload
+```
